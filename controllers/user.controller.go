@@ -60,3 +60,30 @@ func UserControllerCreate(ctx *fiber.Ctx) error {
 		"data":    newUser,
 	})
 }
+
+func UserControllerGetById(ctx *fiber.Ctx) error {
+	id := ctx.Params("id")
+	var user entity.User
+	result := database.DB.Debug().Where("id = ?", id).First(&user)
+
+	if result.Error != nil {
+		return ctx.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"message": "User not found",
+		})
+	}
+
+	// userResponse := response.UserResponse{
+	// 	ID:        user.ID,
+	// 	Email:     user.Email,
+	// 	Name:      user.Name,
+	// 	Address:   user.Address,
+	// 	Phone:     user.Phone,
+	// 	CreatedAt: user.CreatedAt,
+	// 	UpdatedAt: user.UpdatedAt,
+	// }
+
+	return ctx.JSON(fiber.Map{
+		"message": "Success get user by id",
+		"data":    user,
+	})
+}
