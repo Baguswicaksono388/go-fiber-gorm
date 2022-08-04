@@ -87,3 +87,51 @@ func UserControllerGetById(ctx *fiber.Ctx) error {
 		"data":    user,
 	})
 }
+
+func UserControllerUpdate(ctx *fiber.Ctx) error {
+	userUpdate := new(request.UserUpdateRequest)
+	var user entity.User
+
+	if err := ctx.BodyParser(&userUpdate); err != nil {
+		return err
+	}
+
+	validate := validator.New()
+	errValidate := validate.Struct(userUpdate)
+	if errValidate != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"message": "Validation error",
+			"data":    errValidate.Error(),
+		})
+	}
+
+	// Check if user exist
+	id := ctx.Params("id")
+	result := database.DB.Debug().Where("id = ?", id).First(&user)
+	if result.Error != nil {
+		return ctx.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"message": "User not found",
+		})
+	}
+
+	// Update Data User
+	if userUpdate.Name != "" || userUpdate.Email != "" || userUpdate.Address != "" || userUpdate.Phone != "" {
+		user.Name = userUpdate.Name
+		user.Email = userUpdate.Email
+		user.Address = userUpdate.Address
+		user.Phone = userUpdate.Phone
+	}
+
+	errorUpdateUser := database.DB.Debug().Save(&user).Error
+	if errorUpdateUser != nil {
+		return ctx.Status(500).JSON(fiber.Map{
+			"message": "Error update user",
+		})
+	}
+
+	return ctx.JSON(fiber.Map{
+		"message": "Success update user",
+		"data":    user,
+	})
+
+}
