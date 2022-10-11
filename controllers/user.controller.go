@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"go-fiber-gorm/database"
+	"go-fiber-gorm/helpers"
 	"go-fiber-gorm/model/entity"
 	"go-fiber-gorm/model/request"
 	"log"
@@ -46,6 +47,16 @@ func UserControllerCreate(ctx *fiber.Ctx) error {
 		Address: user.Address,
 		Phone:   user.Phone,
 	}
+
+	hashedPassword, err := helpers.HashingPassword(user.Password)
+	if err != nil {
+		log.Println(err)
+		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Internal Server Error",
+		})
+	}
+
+	newUser.Password = hashedPassword
 
 	errorCreateUser := database.DB.Debug().Create(&newUser).Error
 
